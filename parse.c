@@ -48,9 +48,10 @@ int formatfn(char *sfn, char *filename)
 			break;
 		
 	}
-	//sfn[n++] = 0;
+
 	while ( n < 8 )
 		sfn[n++] = ' ';	// pad with spaces
+
 	return n;
 }
 
@@ -75,8 +76,7 @@ void getExtension(char *ext, char *filename)
 	}
 	while (n<3)
 		ext[n++] = ' '; // pad with spaces
-	
-//	ext[n] = 0;
+
 }
 
 int findString(char *fstr, char *str, int size)

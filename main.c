@@ -202,12 +202,9 @@ int main(int argc, char *argv[])
 	}
 	
 
-	
-
 #ifdef __WIN32__	
 	WSACleanup();
 #endif
-	
 	
 	return 0;
 }

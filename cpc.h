@@ -29,5 +29,6 @@ typedef struct
 } __attribute__((packed)) _cpchead;
 
 int decrypt_basp(unsigned char *data, int size);
+unsigned short checksum16(unsigned char *data, int size);
 
 #endif

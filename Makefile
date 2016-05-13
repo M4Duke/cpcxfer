@@ -1,7 +1,7 @@
 TARGET 		= xfer
 
 OBJS 		= main.o http.o cpc.o parse.o
-INCDIR 		= -I../include -I..
+INCDIR 		= -I.
 LIBS  		= wsock32
 CC 			= gcc
 CFLAGS 		= -O2  -W

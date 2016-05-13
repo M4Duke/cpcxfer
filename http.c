@@ -150,10 +150,6 @@ int httpResponse(SOCKET sd)
 {
 	int n, i, ret;
 	char *response;
-	char *line;
-
-	
-	
 	
 	response = malloc(4096);
 	
@@ -241,8 +237,6 @@ int httpGet(SOCKET sd, char *host, char *url, int skipheader)
 				
 			}
 		}
-		
-		
 	}
 
 	return -1;

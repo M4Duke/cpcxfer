@@ -98,7 +98,7 @@ void upload(char *filename, char *path, char *ip, int opt)
 	
 		k = strlen(fullpath);
 		j = 0;
-		for (i=0; i < (k+1); i++)
+		for (i=n; i < (k+1); i++)
 		{
 			if ( (fullpath[i] == '/') && (fullpath[i+1] == '/') )
 				i++;
@@ -106,7 +106,7 @@ void upload(char *filename, char *path, char *ip, int opt)
 			fullpath[j++] = fullpath[i];
 		}
 		
-		if ( httpSend(sd, &fullpath[n], buf, size, "upfile", "/upload.html", ip) >= 0 )
+		if ( httpSend(sd, fullpath, buf, size, "upfile", "/upload.html", ip) >= 0 )
 			ret = httpResponse(sd);
 		
 		httpClose(sd);

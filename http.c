@@ -201,7 +201,7 @@ int httpGet(SOCKET sd, char *host, char *url, int skipheader)
 				i = findString("\r\n\r\n", &response[pos], n-pos);
 				if ( i > 0 )
 				{
-					
+					int headerFound = 0;	
 					FILE *f;
 					pos+=i;
 					// get filename from url
@@ -217,14 +217,15 @@ int httpGet(SOCKET sd, char *host, char *url, int skipheader)
 						n+=pos;
 						if ( n==0 )
 							break;
-						if ( (pos != 0) && skipheader )
+						if ( (headerFound == 0) && skipheader )
 						{	// check if its a valid header at all (not going to remove it, if it doesnt have one!)
 							_cpchead *cpcheader = (_cpchead *)response;
-							
 							if ( checksum16(response, 66) == cpcheader->checksum )
 								fwrite(&response[0x80], n-0x80, 1, f);
 							else
 								fwrite(&response[0], n, 1, f);
+								
+							headerFound = 1;
 						}
 						else
 							fwrite(&response[0], n, 1, f);

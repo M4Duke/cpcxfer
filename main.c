@@ -14,10 +14,37 @@
 
 void dispInfo(char *exename)
 {
-	printf("CPC M4 xfer tool v1.0.0 - Duke 2016\r\n");
+	printf("CPC M4 xfer tool v1.0.1 - Duke 2016\r\n");
 	printf("%s -u ipaddr file path opt\t\t- Upload file, opt 0: no header add, 1: add ascii header\r\n", exename);
 	printf("%s -d ipaddr file path opt\t\t- Download file, opt 0: leave header, 1: remove header\r\n", exename);
+	printf("%s -r ipaddr\t\t\t\t- Reboot M4\r\n", exename);
+}
 
+void reset(char *ip)
+{	char httpReq[128];
+	int sd, n;
+	
+	sd = httpConnect(ip);
+	
+	if ( sd > 0 )
+	{	
+		// mres = m4 reboot
+		// cres = cpc reset
+		// chlt = cpc pause/unpause (BUSRQ)
+		
+		n = sprintf(httpReq, "GET /config.cgi?mres HTTP/1.0\r\nHost: %s\r\nUser-Agent: cpcxfer\r\n\r\n", ip);
+		send(sd, httpReq, n, 0);
+		
+		while (n <= 0)	// ignore response... a 200 OK check would be a good idea....
+			n = recv(sd, httpReq, sizeof(httpReq),0 );
+	
+#ifdef __WIN32__
+		closesocket(sd);
+#else
+		close(sd);
+#endif	
+		printf("M4 Reset request sent.\r\n");
+	}
 }
 
 void upload(char *filename, char *path, char *ip, int opt)
@@ -160,19 +187,25 @@ int main(int argc, char *argv[])
 	WSADATA WsaDat;
 #endif
 
-	if ( argc < 4 )
+	if ( argc < 2 )
 	{	
 		dispInfo(argv[0]);
 		exit(0);
 	}
-	
-	// upload
-	if ( !strnicmp(argv[1], "-u", 2) )
+
+#ifdef __WIN32__
+	WSAStartup(MAKEWORD(2,2),&WsaDat);		
+#endif	
+
+	if ( !strnicmp(argv[1], "-r", 2) )	// reset
+	{
+		reset(argv[2]);
+	}
+	else
+	if ( !strnicmp(argv[1], "-u", 2) && (argc>=4) )	// upload
 	{
 		
-#ifdef __WIN32__
-		WSAStartup(MAKEWORD(2,2),&WsaDat);		
-#endif
+
 		if ( argc < 5 )
 		{
 			dispInfo(argv[0]);
@@ -184,12 +217,8 @@ int main(int argc, char *argv[])
 		
 		upload(argv[3], argv[4], argv[2], opt);
 	}
-	else if ( !strnicmp(argv[1], "-d", 2) )	// download
+	else if ( !strnicmp(argv[1], "-d", 2) && (argc>=4) )	// download
 	{	
-#ifdef __WIN32__
-		WSAStartup(MAKEWORD(2,2),&WsaDat);		
-#endif
-		
 		if ( argc>5 )
 			opt = atoi(argv[5]);
 

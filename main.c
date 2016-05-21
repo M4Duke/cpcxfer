@@ -35,7 +35,7 @@ void reset(char *ip)
 		n = sprintf(httpReq, "GET /config.cgi?mres HTTP/1.0\r\nHost: %s\r\nUser-Agent: cpcxfer\r\n\r\n", ip);
 		send(sd, httpReq, n, 0);
 		
-		while (n <= 0)	// ignore response... a 200 OK check would be a good idea....
+		while (n >= 0)	// ignore response... a 200 OK check would be a good idea....
 			n = recv(sd, httpReq, sizeof(httpReq),0 );
 	
 #ifdef __WIN32__

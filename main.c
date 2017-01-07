@@ -1,7 +1,7 @@
 /*
 	CPC xfer.... transfer files to/from M4 board sd card, via command line, useful for ie. crossdev
 	
-	Duke 2016.
+	Duke 2016/2017
 
 */
 #include <stdlib.h>
@@ -10,32 +10,36 @@
 #include "http.h"
 #include "parse.h"
 #include "cpc.h"
-
+// mres = m4 reboot
+// cres = cpc reset
+// chlt = cpc pause/unpause (BUSRQ)
+// run = run file on sd at startup
 
 void dispInfo(char *exename)
 {
-	printf("CPC M4 xfer tool v1.0.1 - Duke 2016\r\n");
+	printf("CPC M4 xfer tool v2.0.0 - Duke 2016/2017\r\n");
 	printf("%s -u ipaddr file path opt\t\t- Upload file, opt 0: no header add, 1: add ascii header\r\n", exename);
 	printf("%s -d ipaddr file path opt\t\t- Download file, opt 0: leave header, 1: remove header\r\n", exename);
+	printf("%s -f ipaddr file slot name\t\t- Upload rom\r\n", exename);
+	printf("%s -x ipaddr path+file\t\t- Execute remote file\r\n", exename);
+	printf("%s -s ipaddr\t\t\t\t- Reset CPC\r\n", exename);
 	printf("%s -r ipaddr\t\t\t\t- Reboot M4\r\n", exename);
+	
 }
-
 void reset(char *ip)
 {	char httpReq[128];
-	int sd, n;
+	int sd;
+	volatile int n;
 	
 	sd = httpConnect(ip);
 	
 	if ( sd > 0 )
 	{	
-		// mres = m4 reboot
-		// cres = cpc reset
-		// chlt = cpc pause/unpause (BUSRQ)
 		
 		n = sprintf(httpReq, "GET /config.cgi?mres HTTP/1.0\r\nHost: %s\r\nUser-Agent: cpcxfer\r\n\r\n", ip);
 		send(sd, httpReq, n, 0);
 		
-		while (n >= 0)	// ignore response... a 200 OK check would be a good idea....
+		while (n > 0)	// ignore response... a 200 OK check would be a good idea....
 			n = recv(sd, httpReq, sizeof(httpReq),0 );
 	
 #ifdef __WIN32__
@@ -44,6 +48,53 @@ void reset(char *ip)
 		close(sd);
 #endif	
 		printf("M4 Reset request sent.\r\n");
+	}
+}
+void resetCPC(char *ip)
+{	char httpReq[128];
+	int sd;
+	volatile int n;
+	
+	sd = httpConnect(ip);
+	
+	if ( sd > 0 )
+	{	
+		
+		n = sprintf(httpReq, "GET /config.cgi?cres HTTP/1.0\r\nHost: %s\r\nUser-Agent: cpcxfer\r\n\r\n", ip);
+		send(sd, httpReq, n, 0);
+		
+		while (n > 0)	// ignore response... a 200 OK check would be a good idea....
+			n = recv(sd, httpReq, sizeof(httpReq),0 );
+	
+#ifdef __WIN32__
+		closesocket(sd);
+#else
+		close(sd);
+#endif	
+		printf("M4 Reset request sent.\r\n");
+	}
+}
+void run(char *ip, char *path)
+{	char httpReq[128];
+	int sd;
+	volatile int n;
+	
+	sd = httpConnect(ip);
+	
+	if ( sd > 0 )
+	{	
+		n = sprintf(httpReq, "GET /config.cgi?run=%s HTTP/1.0\r\nHost: %s\r\nUser-Agent: cpcxfer\r\n\r\n", path, ip);
+		send(sd, httpReq, n, 0);
+		
+		while (n > 0)	// ignore response... a 200 OK check would be a good idea....
+			n = recv(sd, httpReq, sizeof(httpReq),0 );
+	
+#ifdef __WIN32__
+		closesocket(sd);
+#else
+		close(sd);
+#endif	
+		printf("Running %s\r\n", path);
 	}
 }
 
@@ -148,6 +199,57 @@ void upload(char *filename, char *path, char *ip, int opt)
 	free(buf);
 }
 
+void uploadRom(char *filename, char *ip, int slot, char *slotname)
+{
+	int ret, size, p, n, k, i, j;
+	char fullpath[256];	// don't exceed this, the cpc wouldn't be able |cd it anyway 
+	FILE *fd;
+	
+	SOCKET sd;
+	
+	unsigned char *buf;
+	fd = fopen(filename, "rb");
+	if ( fd == NULL )
+	{	printf("file %s not found\n", filename);
+		return;
+	}
+	
+	fseek(fd, 0, SEEK_END);
+	size = ftell(fd);
+	fseek(fd, 0, SEEK_SET);
+	
+	buf = malloc(size);
+	if ( buf == NULL )
+	{
+		printf("Not enough memory!\n");
+		fclose(fd);
+		return;
+	}
+	
+	fread(buf, size, 1, fd);
+	
+	fclose(fd);
+	
+
+	ret = httpConnect(ip);
+	if ( ret >= 0 )
+	{	sd = ret;	// connect socket
+	
+		if ( httpSendRom(sd, "rom.bin", buf, size, slot, "/roms.shtml", ip, slotname) >= 0 )
+			ret = httpResponse(sd);
+		
+		httpClose(sd);
+		if ( ret == 200 )
+			printf("Upload OK!\r\n");
+		else
+			printf("Upload error code. %i\r\n", ret);
+	}
+	else
+		printf("Connect to %s failed\n", ip);
+
+	free(buf);
+}
+
 void download(char *filename, char *path, char *ip, int opt)
 {
 	SOCKET sd;
@@ -197,15 +299,24 @@ int main(int argc, char *argv[])
 	WSAStartup(MAKEWORD(2,2),&WsaDat);		
 #endif	
 
-	if ( !strnicmp(argv[1], "-r", 2) )	// reset
+	if ( !strnicmp(argv[1], "-r", 2) )	// reboot M4
 	{
 		reset(argv[2]);
 	}
-	else
-	if ( !strnicmp(argv[1], "-u", 2) && (argc>=4) )	// upload
+	else	if ( !strnicmp(argv[1], "-s", 2) )	// reset cpc
 	{
-		
-
+		resetCPC(argv[2]);
+	}
+	else	if ( !strnicmp(argv[1], "-x", 2) && (argc>=3) )	// execute
+	{
+		run(argv[2], argv[3]);
+	}
+	else if ( !strnicmp(argv[1], "-f", 2) && (argc>=4) )	// upload (flash) rom
+	{	
+		uploadRom(argv[3], argv[2], atoi(argv[4]), argv[5] );
+	}
+	else if ( !strnicmp(argv[1], "-u", 2) && (argc>=4) )	// upload 
+	{
 		if ( argc < 5 )
 		{
 			dispInfo(argv[0]);

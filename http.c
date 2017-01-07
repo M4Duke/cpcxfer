@@ -114,6 +114,41 @@ int httpSend(SOCKET sd, char *filename, unsigned char *data, int size, char *for
 
 	return 0;
 }
+int httpSendRom(SOCKET sd, char *filename, unsigned char *data, int size, int slot, char *path, char *host, char *slotname)
+{
+	int i, chunkSize, contentLen;
+	char httpHeader[1024];
+	char httpContent[2*1024];
+	char httpEnd[256];
+	
+	contentLen = sprintf(httpEnd,  "\r\n\r\n--%s--", BOUNDARY_ID);
+	contentLen += sprintf(httpContent, "--%s\r\nContent-Disposition: form-data; name=\"slotnum\"\r\n\r\n%i\r\n--%s\r\nContent-Disposition: form-data; name=\"slotname\"\r\n\r\n%s\r\n--%s\r\nContent-Disposition: form-data; name=\"uploadedfile\"; filename=\"%s\"\r\nContent-Type: application/octet-stream\r\n\r\n", 
+	BOUNDARY_ID, slot, BOUNDARY_ID, slotname, BOUNDARY_ID, filename);
+	contentLen +=size;
+	// send HTTP POST header
+	i = sprintf(httpHeader, "POST %s HTTP/1.1\r\nHost: %s\r\nConnection: keep-alive\r\nContent-Type: multipart/form-data; boundary=%s\r\nContent-Length: %d\r\r\n\r\n", path, host, BOUNDARY_ID,  contentLen);
+	send(sd, httpHeader, strlen(httpHeader), 0);
+	// send content
+	send(sd, httpContent, strlen(httpContent), 0);
+	// actual data
+	i = 0;
+	while ( i < size )
+	{	
+		if ( (size-i) < 1460 )
+			chunkSize = size-i;
+		else
+			chunkSize = 1460;
+
+		send(sd, (char *)&data[i], chunkSize, 0);
+		
+		i+=chunkSize;
+	}
+	
+	// send boundary end
+	send(sd, httpEnd, strlen(httpEnd), 0);
+
+	return 0;
+}
 int getStringValue(char *string, char *buf, int size)
 {	char len[16];
 	int i, j, k;

@@ -26,5 +26,6 @@
 int httpConnect(char *host);
 int httpClose(SOCKET sd);
 int httpSend(SOCKET sockfd, char *filename, unsigned char *data, int size, char *formname, char *path, char *host);
+int httpSendRom(SOCKET sd, char *filename, unsigned char *data, int size, int slot, char *path, char *host, char *slotname);
 int httpResponse(SOCKET sockfd);
 int httpGet(SOCKET sd, char *host, char *url, int skipheader);

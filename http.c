@@ -4,30 +4,11 @@
 	Quick and Dirty HTTP POST and HTTP GET implementations!
 */
 
-#include <errno.h>
-#include <sys/types.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <signal.h>
-#include <unistd.h>
 
-#ifdef __WIN32__
-#include <windows.h>
-#include <winsock2.h>
-#else
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <netdb.h>
-#include <arpa/inet.h>
-#include <sys/uio.h>
-#include <sys/ioctl.h>
-#include <sys/fcntl.h>
-#include <netinet/tcp.h>
-#endif
 
 #include "parse.h"
 #include "cpc.h"
+#include "http.h"
 
 #define BOUNDARY_ID		"-------------123123123"
 

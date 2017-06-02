@@ -5,6 +5,27 @@
 */
 #include "string.h"
 
+
+
+
+
+
+#ifdef __unix__  
+int strnicmp(char const *a, char const *b, unsigned int lenght)
+{
+    unsigned int idx= 0;
+    for (;; a++, b++) {
+        int d = tolower(*a) - tolower(*b);
+	++idx ;
+        if (d != 0 || !*a || idx==lenght)
+            return d;
+    }
+}
+
+#endif
+
+
+
 int pathPos(char *filename, int len)
 {
 	int i;

@@ -22,7 +22,10 @@
 #include <sys/ioctl.h>
 #include <sys/fcntl.h>
 #include <netinet/tcp.h>
+
+typedef int SOCKET;
 #endif
+
 int httpConnect(char *host);
 int httpClose(SOCKET sd);
 int httpSend(SOCKET sockfd, char *filename, unsigned char *data, int size, char *formname, char *path, char *host);

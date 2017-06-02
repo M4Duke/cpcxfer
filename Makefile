@@ -2,10 +2,15 @@ TARGET 		= xfer
 
 OBJS 		= main.o http.o cpc.o parse.o
 INCDIR 		= -I.
-LIBS  		= wsock32
-CC 			= gcc
+CC 		= gcc
 CFLAGS 		= -O2  -W
-LDFLAGS 		= -s -Wl
+ifeq ($(OS),Windows_NT)
+LDFLAGS 	= -s -Wl
+LIBS  		= -lwsock32
+else
+LDFLAGS 	= -s 
+LIBS  		= 
+endif
 STRIP		= strip
 
 
@@ -13,7 +18,7 @@ all:		$(TARGET)
 
 
 $(TARGET): ${OBJS}
-	${CC} -o "$@" ${OBJS} ${LDFLAGS} -l${LIBS}
+	${CC} -o "$@" ${OBJS} ${LDFLAGS} ${LIBS}
 	$(STRIP) $(TARGET).exe
 	rm -f ${OBJS}
 

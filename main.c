@@ -22,6 +22,7 @@ void dispInfo(char *exename)
 	printf("%s -d ipaddr file path opt\t\t- Download file, opt 0: leave header, 1: remove header\r\n", exename);
 	printf("%s -f ipaddr file slot name\t\t- Upload rom\r\n", exename);
 	printf("%s -x ipaddr path+file\t\t- Execute file on CPC\r\n", exename);
+	printf("%s -y ipaddr local_file\t\t- Upload file on CPC and execute it immediatly (the sd card must contain folder '/tmp')\r\n", exename);
 	printf("%s -s ipaddr\t\t\t\t- Reset CPC\r\n", exename);
 	printf("%s -r ipaddr\t\t\t\t- Reboot M4\r\n", exename);
 	
@@ -327,6 +328,20 @@ int main(int argc, char *argv[])
 			opt = atoi(argv[5]);
 		
 		upload(argv[3], argv[4], argv[2], opt);
+	}
+	else if ( !strnicmp(argv[1], "-y", 2) && (argc>=3) )
+	{
+        // Prepare the file manipulation variables
+        char fullpath[256];
+		char path[] = "/tmp"; // TODO Find a way to use /tmp or something like that
+		char * filename = argv[3];
+		char * ip = argv[2];
+		int p = pathPos(filename, strlen(filename));	// strip any PC path from filename
+		sprintf(fullpath, "%s/%s", path, &filename[p]);
+                
+		upload(filename, path, ip, 0);  // Upload the file on CPC
+		run(ip, fullpath);              // Execute the file on CPC
+
 	}
 	else if ( !strnicmp(argv[1], "-d", 2) && (argc>=4) )	// download
 	{	

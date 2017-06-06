@@ -17,7 +17,7 @@
 
 void dispInfo(char *exename)
 {
-	printf("CPC M4 xfer tool v2.0.0 - Duke 2016/2017\r\n");
+	printf("CPC M4 xfer tool v2.0.1 - Duke 2016/2017\r\n");
 	printf("%s -u ipaddr file path opt\t\t- Upload file, opt 0: no header add, 1: add ascii header\r\n", exename);
 	printf("%s -d ipaddr file path opt\t\t- Download file, opt 0: leave header, 1: remove header\r\n", exename);
 	printf("%s -f ipaddr file slot name\t\t- Upload rom\r\n", exename);

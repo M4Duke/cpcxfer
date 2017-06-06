@@ -1,13 +1,22 @@
 # cpcxfer
-Cmd line tool to transfer files to and from M4 board via WiFi
+Cmd line tool to transfer files to and from M4 board via WiFi.
+
 Command 	Effect
+
 xfer -u ipaddr file path opt   - Upload file, opt 0: no header add, 1: add ascii header
+
 xfer -d ipaddr file path opt   - Download file, opt 0: leave header, 1: remove header
+
 xfer -f ipaddr file slot name  - Upload rom
+
 xfer -x ipaddr path+file 	     - Execute file on CPC
+
 xfer -y ipaddr local_file      - Upload file on CPC and execute it immediatly (the sd card must contain folder '/tmp')
+
 xfer -s ipaddr 	               - Reset CPC
+
 xfer -r ipaddr 	               - Reboot M4 
+
 
 Usage:
 Example : If your m4 has IP number 192.168.1.11, the following code will run zynaps from given directory.

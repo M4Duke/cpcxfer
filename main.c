@@ -21,7 +21,7 @@ void dispInfo(char *exename)
 	printf("%s -u ipaddr file path opt\t\t- Upload file, opt 0: no header add, 1: add ascii header\r\n", exename);
 	printf("%s -d ipaddr file path opt\t\t- Download file, opt 0: leave header, 1: remove header\r\n", exename);
 	printf("%s -f ipaddr file slot name\t\t- Upload rom\r\n", exename);
-	printf("%s -x ipaddr path+file\t\t- Execute remote file\r\n", exename);
+	printf("%s -x ipaddr path+file\t\t- Execute file on CPC\r\n", exename);
 	printf("%s -s ipaddr\t\t\t\t- Reset CPC\r\n", exename);
 	printf("%s -r ipaddr\t\t\t\t- Reboot M4\r\n", exename);
 	

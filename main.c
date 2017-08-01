@@ -10,6 +10,14 @@
 #include "http.h"
 #include "parse.h"
 #include "cpc.h"
+
+
+#ifndef __WIN32__
+       #include <sys/types.h>
+       #include <sys/stat.h>
+       #include <unistd.h>
+#endif
+
 // mres = m4 reboot
 // cres = cpc reset
 // chlt = cpc pause/unpause (BUSRQ)
@@ -99,6 +107,16 @@ void run(char *ip, char *path)
 	}
 }
 
+#ifndef __WIN32__
+int is_regular_file(const char *path)
+{
+    struct stat path_stat;
+    stat(path, &path_stat);
+    return S_ISREG(path_stat.st_mode);
+}
+#endif
+
+
 void upload(char *filename, char *path, char *ip, int opt)
 {
 	int ret, size, p, n, k, i, j;
@@ -113,6 +131,14 @@ void upload(char *filename, char *path, char *ip, int opt)
 	{	printf("file %s not found\n", filename);
 		return;
 	}
+
+#ifndef __WIN32__
+	if (!is_regular_file(filename))
+	{	printf("file %s is not a regular file\n", filename);
+		fclose(fd);
+		return;
+	}
+#endif
 	
 	fseek(fd, 0, SEEK_END);
 	size = ftell(fd);

@@ -44,3 +44,53 @@ If you are deving roms, they can be remotely uploaded too :
 `xfer -f 192.168.1.11 launcher.rom 4 "The Launcher"` (upload to slot 4)
 
 `xfer -r 192.168.1.11` (Reboot M4 for changes to take effect) 
+
+
+
+## Python version
+
+A python client is also provided in `pyxfer.py`. It can be used as it is is or as a library for another application.
+It has globally the same arguments than the native version. 
+Here are some differences:
+
+ - It is able to create directories or remove files and directories.
+ - The arguments for downloading a file are slightly different (full path instead of filename + path).
+ - The managmeent of headers has still not be coded; will be done if requested
+
+
+Here is the documentation of this version:
+
+~~~
+Python xfer.
+
+Usage:
+    pyxfer -s <ip>
+    pyxfer -r <ip>
+    pyxfer -u <ip> <file> [<path>] [<opt>]
+    pyxfer -d <ip> <cpcfile> [<opt>]
+    pyxfer -x <ip> <cpcfile>
+    pyxfer -y <ip> <file> [<opt>]
+    pyxfer -m <ip> <folder>
+    pyxfer --cd <ip> <cpcfolder>
+    pyxfer --rm <ip> <cpcfile>
+    pyxfer --delRom <ip> <romid>
+    pyxfer -f <ip> <file> <romid> <name>
+    pyxfer -p <ip>
+    pyxfer --ls <ip> [<folder>]
+
+
+Options:
+    -s      Reset CPC.
+    -r      Reboot M4.
+    -u      Upload a file on the SD card of the M4.
+    -d      Download a file from the SD card of the M4.
+    -x      Execute the program on the SD card of the M4.
+    -y      Upload and execute the program on the /tmp of SD card of the M4.
+    -m      Create directory on the SD card.
+    --cd    Change current directory in CPC.
+    --rm    Delete file or empty directory on CPC.
+    -f      Install ROM <file> at position <romid>.
+    --delRom    Delete the ROM.
+    -p      Put CPC in pause.
+    --ls    List files on CPC.
+~~~

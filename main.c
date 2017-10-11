@@ -25,8 +25,8 @@
 
 void dispInfo(char *exename)
 {
-	printf("CPC M4 xfer tool v2.0.1 - Duke 2016/2017\r\n");
-	printf("%s -u ipaddr file path opt\t\t- Upload file, opt 0: no header add, 1: add ascii header\r\n", exename);
+	printf("CPC M4 xfer tool v2.0.2 - Duke 2016/2017\r\n");
+	printf("%s -u ipaddr file path opt\t\t- Upload file, opt 0: no header add, 1: add ascii header 2: binary header\r\n", exename);
 	printf("%s -d ipaddr file path opt\t\t- Download file, opt 0: leave header, 1: remove header\r\n", exename);
 	printf("%s -f ipaddr file slot name\t\t- Upload rom\r\n", exename);
 	printf("%s -x ipaddr path+file\t\t- Execute file on CPC\r\n", exename);
@@ -117,7 +117,7 @@ int is_regular_file(const char *path)
 #endif
 
 
-void upload(char *filename, char *path, char *ip, int opt)
+void upload(char *filename, char *path, char *ip, int opt, unsigned short start, unsigned short exec)
 {
 	int ret, size, p, n, k, i, j;
 	char fullpath[256];	// don't exceed this, the cpc wouldn't be able |cd it anyway 
@@ -164,9 +164,21 @@ void upload(char *filename, char *path, char *ip, int opt)
 		
 		switch (opt)
 		{
-			default:		// just ascii for now
+					
+			
+			case 1:
 			cpcheader->addr = 0x172;	// protext uses this
 			cpcheader->type = 10; 	
+			cpcheader->size = size;
+			cpcheader->size2 = size;
+			cpcheader->checksum = checksum16(buf, 66);
+			break;
+			
+			default:
+			case 2:		// binary header
+			cpcheader->addr = start;
+			cpcheader->exec = exec;
+			cpcheader->type = 2; 	
 			cpcheader->size = size;
 			cpcheader->size2 = size;
 			cpcheader->checksum = checksum16(buf, 66);
@@ -343,7 +355,8 @@ int main(int argc, char *argv[])
 		uploadRom(argv[3], argv[2], atoi(argv[4]), argv[5] );
 	}
 	else if ( !strnicmp(argv[1], "-u", 2) && (argc>=4) )	// upload 
-	{
+	{	unsigned short start = 0;
+		unsigned short exec = 0;
 		if ( argc < 5 )
 		{
 			dispInfo(argv[0]);
@@ -351,9 +364,25 @@ int main(int argc, char *argv[])
 		}
 		
 		if ( argc>5 )
-			opt = atoi(argv[5]);
+		{	opt = atoi(argv[5]);
+			
+			if ( opt == 2 )	// add binary header ?
+			{
+				// we need more parameters then
+				
+				if ( argc < 8 )
+				{
+					printf("Please add start address and exec. address for binary header\r\n");
+					exit(0);	
+				}
+				
+				start = atoh(argv[6]);
+				exec = atoh(argv[7]);
+				
+			}
 		
-		upload(argv[3], argv[4], argv[2], opt);
+		}
+		upload(argv[3], argv[4], argv[2], opt, start, exec);
 	}
 	else if ( !strnicmp(argv[1], "-y", 2) && (argc>=3) )
 	{
@@ -365,7 +394,7 @@ int main(int argc, char *argv[])
 		int p = pathPos(filename, strlen(filename));	// strip any PC path from filename
 		sprintf(fullpath, "%s/%s", path, &filename[p]);
                 
-		upload(filename, path, ip, 0);  // Upload the file on CPC
+		upload(filename, path, ip, 0, 0, 0 );  // Upload the file on CPC
 		run(ip, fullpath);              // Execute the file on CPC
 
 	}

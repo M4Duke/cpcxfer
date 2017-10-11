@@ -122,3 +122,30 @@ int findString(char *fstr, char *str, int size)
 	}
 	return -1;
 }
+
+
+unsigned int atoh(char *string)
+{	unsigned int val = 0;
+	unsigned int d;
+	char c;
+	
+	while ( (c = *string++) != 0 )
+	{
+		if (c >= '0' && c <= '9')
+			d = (unsigned int)(c - '0');
+		else if (c >= 'a' && c <= 'f')
+			d = (unsigned int)(c - 'a') + 10;
+		else if (c >= 'A' && c <= 'F')
+			d = (unsigned int)(c - 'A') + 10;
+		else if (c == 'x')
+			;
+		else if (c == '&')
+			;
+		else
+			break;
+		if (c != 'x')
+			val = (val << 4) + d;
+	}
+
+	return val;
+}

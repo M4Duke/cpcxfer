@@ -7,7 +7,7 @@ Cmd line tool to transfer files to and from [M4 board](http://www.spinpoint.org/
 
 | Command  | 	Effect |
 |----------|-----------|
-| `xfer -u ipaddr file path opt`   | Upload file, opt 0: no header add, 1: add ascii header |
+| `xfer -u ipaddr file path opt`   | Upload file, opt 0: no header add, 1: add ascii header, 2: add binary header (specify start and exec addr. in hex) |
 | `xfer -d ipaddr file path opt`   | Download file, opt 0: leave header, 1: remove header |
 | `xfer -f ipaddr file slot name`  | Upload rom |
 | `xfer -x ipaddr path+file` 	 | Execute file on CPC |

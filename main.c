@@ -25,12 +25,14 @@
 
 void dispInfo(char *exename)
 {
-	printf("CPC M4 xfer tool v2.0.2 - Duke 2016/2017\r\n");
+	printf("CPC M4 xfer tool v2.0.3 - Duke 2016/2017\r\n");
 	printf("%s -u ipaddr file path opt\t\t- Upload file, opt 0: no header add, 1: add ascii header 2: binary header\r\n", exename);
 	printf("%s -d ipaddr file path opt\t\t- Download file, opt 0: leave header, 1: remove header\r\n", exename);
 	printf("%s -f ipaddr file slot name\t\t- Upload rom\r\n", exename);
+	printf("%s -c ipaddr file\t\t\t- Upload cartridge image (.CPR/.BIN)\r\n", exename);
 	printf("%s -x ipaddr path+file\t\t- Execute file on CPC\r\n", exename);
 	printf("%s -y ipaddr local_file\t\t- Upload file on CPC and execute it immediatly (the sd card must contain folder '/tmp')\r\n", exename);
+	printf("%s -p ipaddr\t\t\t\t- Start (plus) cartridge\r\n", exename);
 	printf("%s -s ipaddr\t\t\t\t- Reset CPC\r\n", exename);
 	printf("%s -r ipaddr\t\t\t\t- Reboot M4\r\n", exename);
 	
@@ -59,6 +61,32 @@ void reset(char *ip)
 		printf("M4 Reset request sent.\r\n");
 	}
 }
+
+void startCard(char *ip)
+{	char httpReq[128];
+	int sd;
+	volatile int n;
+	
+	sd = httpConnect(ip);
+	
+	if ( sd > 0 )
+	{	
+		
+		n = sprintf(httpReq, "GET /config.cgi?cctr HTTP/1.0\r\nHost: %s\r\nUser-Agent: cpcxfer\r\n\r\n", ip);
+		send(sd, httpReq, n, 0);
+		
+		while (n > 0)	// ignore response... a 200 OK check would be a good idea....
+			n = recv(sd, httpReq, sizeof(httpReq),0 );
+	
+#ifdef __WIN32__
+		closesocket(sd);
+#else
+		close(sd);
+#endif	
+		printf("M4 Reset request sent.\r\n");
+	}
+}
+
 void resetCPC(char *ip)
 {	char httpReq[128];
 	int sd;
@@ -83,6 +111,7 @@ void resetCPC(char *ip)
 		printf("M4 Reset request sent.\r\n");
 	}
 }
+
 void run(char *ip, char *path)
 {	char httpReq[128];
 	int sd;
@@ -238,6 +267,65 @@ void upload(char *filename, char *path, char *ip, int opt, unsigned short start,
 	free(buf);
 }
 
+void uploadctr(char *filename, char *ip)
+{
+	int ret, size, p, n, k, i, j;
+	FILE *fd;
+	
+	SOCKET sd;
+	
+	unsigned char *buf;
+	fd = fopen(filename, "rb");
+	if ( fd == NULL )
+	{	printf("file %s not found\n", filename);
+		return;
+	}
+
+#ifndef __WIN32__
+	if (!is_regular_file(filename))
+	{	printf("file %s is not a regular file\n", filename);
+		fclose(fd);
+		return;
+	}
+#endif
+	
+	fseek(fd, 0, SEEK_END);
+	size = ftell(fd);
+	fseek(fd, 0, SEEK_SET);
+	
+	buf = malloc(size);
+	if ( buf == NULL )
+	{
+		printf("Not enough memory!\n");
+		fclose(fd);
+		return;
+	}
+	
+	
+	fread(buf, size, 1, fd);	// gah no validation, M4 will verify some...
+	fclose(fd);
+	
+
+	ret = httpConnect(ip);
+	if ( ret >= 0 )
+	{	sd = ret;	// connect socket
+	
+		if ( httpSend(sd, "/CARTIMG.BIN", buf, size, "upfile", "/upload.html", ip) >= 0 )
+			ret = httpResponse(sd);
+		
+		httpClose(sd);
+		if ( ret == 200 )
+			printf("Upload OK!\r\n");
+		else
+			printf("Upload error code. %i\r\n", ret);
+	}
+	else
+		printf("Connect to %s failed\n", ip);
+
+	free(buf);
+}
+
+
 void uploadRom(char *filename, char *ip, int slot, char *slotname)
 {
 	int ret, size, p, n, k, i, j;
@@ -337,7 +425,11 @@ int main(int argc, char *argv[])
 #ifdef __WIN32__
 	WSAStartup(MAKEWORD(2,2),&WsaDat);		
 #endif	
-
+	if ( !strnicmp(argv[1], "-p", 2) )	// reset cpc
+	{
+		startCard(argv[2]);
+	}
+	else
 	if ( !strnicmp(argv[1], "-r", 2) )	// reboot M4
 	{
 		reset(argv[2]);
@@ -383,6 +475,10 @@ int main(int argc, char *argv[])
 		
 		}
 		upload(argv[3], argv[4], argv[2], opt, start, exec);
+	}
+	else if ( !strnicmp(argv[1], "-c", 2) && (argc>=4) )	// upload cartridge
+	{
+		uploadctr(argv[3], argv[2]);
 	}
 	else if ( !strnicmp(argv[1], "-y", 2) && (argc>=3) )
 	{

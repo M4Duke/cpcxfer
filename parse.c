@@ -6,8 +6,9 @@
 #include "string.h"
 
 
-
-
+#ifndef __WIN32__
+       #define strnicmp strncasecmp
+#endif
 
 
 #ifdef __unix__  

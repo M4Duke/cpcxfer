@@ -12,6 +12,10 @@
 
 #define BOUNDARY_ID		"-------------123123123"
 
+#ifndef __WIN32__
+       #define strnicmp strncasecmp
+#endif
+
 int httpConnect(char *host)
 {
 	SOCKET sd;

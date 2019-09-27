@@ -16,6 +16,7 @@
        #include <sys/types.h>
        #include <sys/stat.h>
        #include <unistd.h>
+       #define strnicmp strncasecmp
 #endif
 
 // mres = m4 reboot

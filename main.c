@@ -27,15 +27,15 @@
 void dispInfo(char *exename)
 {
 	printf("CPC M4 xfer tool v2.0.3 - Duke 2016/2017\r\n");
-	printf("%s -u ipaddr file path opt\t\t- Upload file, opt 0: no header add, 1: add ascii header 2: binary header\r\n", exename);
-	printf("%s -d ipaddr file path opt\t\t- Download file, opt 0: leave header, 1: remove header\r\n", exename);
-	printf("%s -f ipaddr file slot name\t\t- Upload rom\r\n", exename);
-	printf("%s -c ipaddr file\t\t\t- Upload cartridge image (.CPR/.BIN)\r\n", exename);
-	printf("%s -x ipaddr path+file\t\t- Execute file on CPC\r\n", exename);
-	printf("%s -y ipaddr local_file\t\t- Upload file on CPC and execute it immediatly (the sd card must contain folder '/tmp')\r\n", exename);
-	printf("%s -p ipaddr\t\t\t\t- Start (plus) cartridge\r\n", exename);
-	printf("%s -s ipaddr\t\t\t\t- Reset CPC\r\n", exename);
-	printf("%s -r ipaddr\t\t\t\t- Reboot M4\r\n", exename);
+	printf("%s -u [ipaddr] file path opt\t\t- Upload file, opt 0: no header add, 1: add ascii header 2: binary header\r\n", exename);
+	printf("%s -d [ipaddr] file path opt\t\t- Download file, opt 0: leave header, 1: remove header\r\n", exename);
+	printf("%s -f [ipaddr] file slot name\t\t- Upload rom\r\n", exename);
+	printf("%s -c [ipaddr] file\t\t\t- Upload cartridge image (.CPR/.BIN)\r\n", exename);
+	printf("%s -x [ipaddr] path+file\t\t- Execute file on CPC\r\n", exename);
+	printf("%s -y [ipaddr] local_file\t\t- Upload file on CPC and execute it immediatly (the sd card must contain folder '/tmp')\r\n", exename);
+	printf("%s -p [ipaddr]\t\t\t\t- Start (plus) cartridge\r\n", exename);
+	printf("%s -s [ipaddr]\t\t\t\t- Reset CPC\r\n", exename);
+	printf("%s -r [ipaddr]\t\t\t\t- Reboot M4\r\n", exename);
 	
 }
 void reset(char *ip)
@@ -410,9 +410,43 @@ void download(char *filename, char *path, char *ip, int opt)
 		printf("Connect failed, wrong ip?\r\n");
 }
 
+
+
+#define GET_CPCIP(argpos, argmax) \
+{ \  
+		printf("%d, %d, %d\n", argc, argmax, argpos); \
+		cpcip = NULL; \
+		cpcip = getenv("CPCIP"); \
+		printf("IP1=%s\n", cpcip); \
+		/*if (cpcip != NULL) \
+		{ \
+			while (*cpcip != '=') {++cpcip;}; \
+			++cpcip; \
+		} else{printf("not found");}*/\
+		printf("IP2=%s\n", cpcip); \
+		if (argc == (argmax)+1 || cpcip==NULL) { \
+		printf("IP2=%s\n", cpcip); \
+			cpcip = argv[(argpos)]; \
+		printf("IP2=%s\n", cpcip); \
+		} \
+		else { \
+			argdelta = -1; \
+		} \
+		if (NULL == cpcip) { \
+ 			fprintf(stderr, "[ERROR] Unable to retreive the IP of the M4.\n Please provide it as an argument or through CPCIP variable.\n"); \
+			 exit(-1); \
+		} \
+		printf("IP3=%s\n", cpcip); \
+}
+
 int main(int argc, char *argv[])
 {	int opt = 0;
-	
+
+	// Retreive the IP of the M4. Can be overriden by the option managment
+	const char * cpcip=NULL;
+	// Contains -1 if the ip is not provided in the command line
+	int argdelta = 0;
+
 #ifdef __WIN32__
 	WSADATA WsaDat;
 #endif
@@ -428,36 +462,42 @@ int main(int argc, char *argv[])
 #endif	
 	if ( !strnicmp(argv[1], "-p", 2) )	// reset cpc
 	{
-		startCard(argv[2]);
+		GET_CPCIP(2, 2);
+		startCard(cpcip);
 	}
 	else
 	if ( !strnicmp(argv[1], "-r", 2) )	// reboot M4
 	{
-		reset(argv[2]);
+		GET_CPCIP(2, 2);
+		reset(cpcip);
 	}
 	else	if ( !strnicmp(argv[1], "-s", 2) )	// reset cpc
 	{
-		resetCPC(argv[2]);
+		GET_CPCIP(2, 2);
+		resetCPC(cpcip);
 	}
 	else	if ( !strnicmp(argv[1], "-x", 2) && (argc>=3) )	// execute
 	{
-		run(argv[2], argv[3]);
+		GET_CPCIP(2, 2);
+		run(cpcip, argv[3 + argdelta]);
 	}
 	else if ( !strnicmp(argv[1], "-f", 2) && (argc>=4) )	// upload (flash) rom
 	{	
-		uploadRom(argv[3], argv[2], atoi(argv[4]), argv[5] );
+		GET_CPCIP(2, 4);
+		uploadRom(argv[3+argdelta], cpcip, atoi(argv[4+argdelta]), argv[5+argdelta] );
 	}
-	else if ( !strnicmp(argv[1], "-u", 2) && (argc>=4) )	// upload 
+	else if ( !strnicmp(argv[1], "-u", 2) && (argc>=3) )	// upload 
 	{	unsigned short start = 0;
 		unsigned short exec = 0;
-		if ( argc < 5 )
+		GET_CPCIP(2, 5);
+		if ( argc < 5+argdelta && cpcip == NULL)
 		{
 			dispInfo(argv[0]);
 			exit(0);
 		}
 		
-		if ( argc>5 )
-		{	opt = atoi(argv[5]);
+		if ( argc>5+argdelta )
+		{	opt = atoi(argv[5+argdelta]);
 			
 			if ( opt == 2 )	// add binary header ?
 			{
@@ -469,38 +509,43 @@ int main(int argc, char *argv[])
 					exit(0);	
 				}
 				
-				start = atoh(argv[6]);
-				exec = atoh(argv[7]);
+				start = atoh(argv[6+argdelta]);
+				exec = atoh(argv[7+argdelta]);
 				
 			}
 		
 		}
-		upload(argv[3], argv[4], argv[2], opt, start, exec);
+
+		upload(argv[3+argdelta], argv[4+argdelta], cpcip, opt, start, exec);
 	}
 	else if ( !strnicmp(argv[1], "-c", 2) && (argc>=4) )	// upload cartridge
 	{
-		uploadctr(argv[3], argv[2]);
+		GET_CPCIP(2, 3);
+		uploadctr(argv[3+argdelta], cpcip);
 	}
 	else if ( !strnicmp(argv[1], "-y", 2) && (argc>=3) )
 	{
+		GET_CPCIP(2, 3);
         // Prepare the file manipulation variables
         char fullpath[256];
 		char path[] = "/tmp"; // TODO Find a way to use /tmp or something like that
-		char * filename = argv[3];
-		char * ip = argv[2];
+		char * filename = argv[3+argdelta];
 		int p = pathPos(filename, strlen(filename));	// strip any PC path from filename
 		sprintf(fullpath, "%s/%s", path, &filename[p]);
                 
-		upload(filename, path, ip, 0, 0, 0 );  // Upload the file on CPC
-		run(ip, fullpath);              // Execute the file on CPC
+		upload(filename, path, cpcip, 0, 0, 0 );  // Upload the file on CPC
+		run(cpcip, fullpath);              // Execute the file on CPC
 
 	}
 	else if ( !strnicmp(argv[1], "-d", 2) && (argc>=4) )	// download
 	{	
-		if ( argc>5 )
-			opt = atoi(argv[5]);
+		GET_CPCIP(2, 5);
 
-		download(argv[3], argv[4], argv[2], opt);
+		// TODO properlly manage the case when not provided
+		if ( argc>5 )
+			opt = atoi(argv[5+argdelta]);
+
+		download(argv[3+argdelta], argv[4+argdelta], argv[2], opt);
 	}
 	else
 	{	

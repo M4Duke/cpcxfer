@@ -19,7 +19,7 @@ all:		$(TARGET)
 
 $(TARGET): ${OBJS}
 	${CC} -o "$@" ${OBJS} ${LDFLAGS} ${LIBS}
-	$(STRIP) $(TARGET).exe
+	$(STRIP) $(TARGET)
 	rm -f ${OBJS}
 
 %.o : %.c

@@ -7,7 +7,9 @@
 
 
 #ifndef __WIN32__
+#if  __GNUC__ < 7
        #define strnicmp strncasecmp
+#endif
 #endif
 
 

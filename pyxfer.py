@@ -65,10 +65,10 @@ class XFER(object):
         assert os.path.isfile(path)
 
         if opt!=0:
-            raise "Need to add an amsdos header"
+            raise Exception("Need to add an amsdos header")
 
 
-        print "Upload " + path + " in " + destination
+        print("Upload " + path + " in " + destination)
         url = self._getUrl("upload.html")
         r = requests.post(
             url,
@@ -95,7 +95,7 @@ class XFER(object):
             self.mkdir(current_base)
             for filename in os.listdir(current_dir):
                 filename = os.path.join( path, filename)
-                print ">", filename, current_base, opt
+                print(">", filename, current_base, opt)
                 self.upload(filename, current_base, opt)
 
 
@@ -104,14 +104,14 @@ class XFER(object):
     def resetM4(self):
         url = self._getUrl("config.cgi?mres")
 
-        print "Reset M4"
+        print("Reset M4")
         r= requests.get(url, headers=self._getHeaders())
         assert r.status_code == 200
 
     def resetCPC(self):
         url = self._getUrl("config.cgi?cres")
 
-        print "Reset CPC"
+        print("Reset CPC")
         r= requests.get(url, headers=self._getHeaders())
         assert r.status_code == 200
 
@@ -125,7 +125,7 @@ class XFER(object):
 
 
     def download(self, path, opt):
-        print "Download" + path 
+        print("Download" + path) 
         url = self._getUrl("sd/%s" % path)
         r = requests.get( url)
         assert r.status_code == 200
@@ -138,7 +138,7 @@ class XFER(object):
     def execute(self, cpcfile):
         url = self._getUrl("config.cgi")
 
-        print "Execute " + cpcfile
+        print("Execute " + cpcfile)
 
         r = requests.get(
             url,
@@ -154,7 +154,7 @@ class XFER(object):
         if folder[0] != "/":
             folder = "/" + folder
 
-        print "Create directory " + folder
+        print("Create directory " + folder)
 
 
         url = self._getUrl("config.cgi")
@@ -201,7 +201,7 @@ class XFER(object):
         assert 0 <= int(romid) <= 31
         assert os.path.isfile(fname)
 
-        print "Put ROM "  + fname + " in " + romid + ' as ' + name
+        print("Put ROM "  + fname + " in " + romid + ' as ' + name)
         url = self._getUrl("roms.shtml")
         r = requests.post(
             url,
@@ -232,7 +232,7 @@ class XFER(object):
 
 
     def ls(self, cpcfolder):
-        print "LS in " + cpcfolder
+        print("LS in " + cpcfolder)
         url = self._getUrl("config.cgi")
 
         r = requests.get(
@@ -250,7 +250,7 @@ class XFER(object):
             url
         )
         assert r.status_code == 200
-        print r.text
+        print(r.text)
 
 # code
 if __name__ == '__main__':
@@ -319,7 +319,7 @@ if __name__ == '__main__':
             arguments["<folder>"] = ""
         xfer.ls(arguments["<folder>"])
     else:
-        print "Option unknown"
+        print("Option unknown")
 
 
 # metadata
